@@ -78,7 +78,7 @@ class SetteeRestClient {
     
     $resp_code = curl_getinfo($this->curl, CURLINFO_HTTP_CODE);
     if ($resp_code == 404 ) {
-      throw new SetteeRestClientException("Couch document not found at: '$full_url'");
+      throw new SetteeRestClientException("Couch document not found at: '$full_url'", $resp_code);
     }
 
     if (function_exists('http_parse_headers')) {
@@ -178,7 +178,7 @@ class SetteeRestClient {
 
     if ($resp_code < 199 || $resp_code > 399 || !empty($response['decoded']->error)) {
       $msg = "CouchDB returned: \"HTTP 1.1. $resp_code\". ERROR: " . $response['json'];
-      throw new SetteeRestClientException($msg);
+      throw new SetteeRestClientException($msg, $resp_code, json_decode($response['json']));
     }
   }
 
@@ -243,4 +243,20 @@ class SetteeRestClient {
   }
 }
 
-class SetteeRestClientException extends Exception {}
+class SetteeRestClientException extends Exception {
+	public $errorMessage;
+	public $responseCode;
+	public $responseObject;
+
+	public function __construct($errorMessage = "", $responseCode = "", $responseObject = "")
+	{
+		$this->errorMessage = $errorMessage;
+		$this->responseCode = $responseCode;
+		$this->responseObject = $responseObject;
+	}
+	
+	public function __toString()
+	{
+		return $this->errorMessage;
+	}
+}
